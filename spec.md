@@ -9,9 +9,9 @@ Provide a release-oriented testing flow between:
 
 so that:
 
-1. pushing an operator release tag builds the operator image and tests it locally on Docker/Kind
-2. submitting a PR on `openserverless-operator` also builds and tests the operator locally
-3. an optional PR comment can request the same build/test flow again
+1. pushing an operator release tag builds and publishes the operator image
+2. PR-triggered operator testing is enabled only by a specific PR comment
+3. all operator tests run in `openserverless-testing`
 4. a successful operator release build triggers `openserverless-testing`
 5. `openserverless-testing` materializes release-style test tags such as:
    - `kind-0.1.0-incubating.123456`
@@ -56,38 +56,23 @@ Expected behavior:
 1. checkout code with submodules
 2. resolve operator image repository
 3. build the operator image
-4. test it locally with Docker/Kind
-5. publish the image
+4. publish the image
 6. trigger `openserverless-testing`
 7. request generation of one tag per target, at least:
    - `kind-<operator-tag>`
    - `k3s-<operator-tag>`
 
-### 2. Pull request flow
+### 2. Comment-triggered PR flow
 
 Trigger:
 
-- `pull_request` against `main`
-
-Expected behavior:
-
-1. build the operator image for the PR commit
-2. test it locally with Docker/Kind
-3. keep the result visible in the PR checks
-
-This flow does not need to publish a release image.
-
-### 3. Comment-triggered PR flow
-
-Optional but desired trigger:
-
-- `issue_comment` on a PR, for example `/test build`
+- `issue_comment` on a PR, for example `/test kind` or `/test k3s`
 
 Expected behavior:
 
 1. resolve the PR head SHA and head ref
-2. checkout the PR code
-3. rerun the same local build/test pipeline used by the PR workflow
+2. dispatch the request to `openserverless-testing`
+3. let `openserverless-testing` build the PR image and run the requested suite
 
 ## Required Testing Repository Flows
 
@@ -157,17 +142,17 @@ This specification supersedes the older contracts based on:
 
 For release validation the canonical flow is now:
 
-- operator release tag -> local operator build/test -> testing repo tags -> downstream infrastructure tests
+- operator release tag -> publish operator image -> testing repo tags -> downstream infrastructure tests
 
 For PR validation the canonical flow is:
 
-- PR event or PR comment -> local operator build/test
+- PR comment -> testing repo build/test
 
 ## Minimum Deliverables
 
-1. `openserverless-operator` workflow for release-tag build/test/publish/dispatch
-2. `openserverless-operator` workflow for PR build/test
-3. optional `openserverless-operator` comment-triggered rerun workflow
+1. `openserverless-operator` workflow for release-tag build/publish/dispatch
+2. `openserverless-operator` workflow for comment-triggered PR dispatch
+3. `openserverless-testing` workflow that builds/tests operator PRs
 4. `openserverless-testing` workflow that creates release-style testing tags on dispatch
 5. `openserverless-testing` support for parsing `<test>-<operator-tag>`
 6. `openserverless-testing` support for injecting the operator image repository under test

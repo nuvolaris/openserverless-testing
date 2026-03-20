@@ -172,15 +172,14 @@
 ### `openserverless-operator` implementation
 
 - On a clean `nuvolaris` worktree, replaced the old PR-label dispatch workflow with:
-  - `check.yml`
-    - PR and manual local build/test with Docker/Kind
-  - `comment-build.yml`
-    - `/test build` rerun on PR comments from collaborators
+  - `trigger-testing.yaml`
+    - comment-triggered PR dispatch to `openserverless-testing`
   - `image.yml`
-    - release-tag build/test/publish
+    - release-tag build/publish
     - downstream dispatch to `openserverless-testing`
-- Added helper scripts:
-  - `.github/build-and-test.sh`
+  - `check.yml`
+    - lightweight repo checks only
+- Added helper script:
   - `.github/dispatch-testing-tags.sh`
 - The operator image repository is now resolved from:
   - workflow input or repo variable `OPERATOR_IMAGE`
@@ -195,9 +194,18 @@
 
 ### Validation still required
 
-- shell syntax checks for the new helper scripts and updated test scripts
 - YAML parsing for the new/updated workflows
 - optional live validation on `nuvolaris` once the branches are pushed
+
+### 2026-03-20 clarification from user
+
+- The user clarified that:
+  - tests must run only in `openserverless-testing`
+  - PR-triggered builds must happen only when enabled by a specific comment
+  - release-tag `image.yml` should not run local Docker/Kind tests inside `openserverless-operator`
+- The implementation was corrected accordingly:
+  - removed local PR build/test from the operator-side design
+  - removed local release test execution from `image.yml`
 
 ## 2026-03-19 Additional Operations
 
