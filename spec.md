@@ -10,7 +10,7 @@ Provide a release-oriented testing flow between:
 so that:
 
 1. pushing an operator release tag builds and publishes the operator image
-2. PR-triggered operator testing is enabled only by a specific PR comment
+2. PR-triggered operator testing is enabled only by specific PR tags/labels
 3. all operator tests run in `openserverless-testing`
 4. a successful operator release build triggers `openserverless-testing`
 5. `openserverless-testing` materializes release-style test tags such as:
@@ -62,11 +62,14 @@ Expected behavior:
    - `kind-<operator-tag>`
    - `k3s-<operator-tag>`
 
-### 2. Comment-triggered PR flow
+### 2. PR tag-triggered flow
 
 Trigger:
 
-- `issue_comment` on a PR, for example `/test kind` or `/test k3s`
+- `pull_request_target` on a PR carrying a testing tag/label such as:
+  - `kind`
+  - `k3s`
+  - `eks`
 
 Expected behavior:
 
@@ -146,12 +149,12 @@ For release validation the canonical flow is now:
 
 For PR validation the canonical flow is:
 
-- PR comment -> testing repo build/test
+- PR tag/label -> testing repo build/test
 
 ## Minimum Deliverables
 
 1. `openserverless-operator` workflow for release-tag build/publish/dispatch
-2. `openserverless-operator` workflow for comment-triggered PR dispatch
+2. `openserverless-operator` workflow for PR tag-triggered dispatch
 3. `openserverless-testing` workflow that builds/tests operator PRs
 4. `openserverless-testing` workflow that creates release-style testing tags on dispatch
 5. `openserverless-testing` support for parsing `<test>-<operator-tag>`
