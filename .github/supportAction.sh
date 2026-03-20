@@ -20,6 +20,8 @@ if ! test -e support
 then echo no support ; exit 0
 fi
 
+env >current-env
+
 sudo apt-get update >/dev/null
 sudo apt-get install openssh-server -y
 sudo systemctl start ssh
