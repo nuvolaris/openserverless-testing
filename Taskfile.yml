@@ -260,11 +260,11 @@ tasks:
     requires: {vars: [N, REF]}
     cmds:
     - |
-      git tag -d $(git tag)
       NOW=$(date +%Y%m%d%H%M)
       TAG={{.N}}-{{.REF}}@$NOW
+      git commit -m "triggering {{.N}} for ref {{.REF}} @ $NOW" || true
+      git tag -d $(git tag)
       git tag $TAG
-      git commit -m "triggering {{.N}} for ref {{.REF}} @ $NOW"
       git push origin main --tags
 
   # OK (kind)
