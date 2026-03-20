@@ -413,3 +413,22 @@
 - Removed the local `openserverless-operator-nuvolaris-traefik-test` worktree.
 - Deleted the matching local `operator` branches listed above.
 - Left Apache-specific release branches and worktrees untouched.
+
+## 2026-03-20 K3s capacity and operator PR workflow
+
+### K3s amd capacity
+
+- The `testing1-k3s-amd.nuvolaris.dev` server was increased to `16 GB` RAM after the end-to-end `k3s-<hash>` run showed delayed Python action scheduling.
+- The failed `python/mongodb` activation was not a code regression:
+  - Kubernetes reported `FailedScheduling` for `wsk0-21-testactionuser-mongodb`
+  - reason: `Insufficient memory`
+  - the activation later completed successfully after the pod was finally scheduled
+
+### Operator PR workflow policy
+
+- `nuvolaris/openserverless-operator` should no longer run the internal `openserverless-operator-check` workflow for pull requests.
+- The intended PR path is now:
+  - `Trigger Testing` on the operator PR
+  - dispatch to `nuvolaris/openserverless-testing`
+  - end-to-end validation there
+- To enforce that, `.github/workflows/check.yml` in the `operator` repo was changed to run only on pushes to `main`, not on `pull_request`.
