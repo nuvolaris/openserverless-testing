@@ -432,3 +432,11 @@
   - dispatch to `nuvolaris/openserverless-testing`
   - end-to-end validation there
 - To enforce that, `.github/workflows/check.yml` in the `operator` repo was changed to run only on pushes to `main`, not on `pull_request`.
+
+### Testing repo workflow drift
+
+- During the same day, `nuvolaris/openserverless-testing:main` was changed upstream to remove `operator-pr-test.yaml` and keep only `AllTests` on tag pushes.
+- This broke the operator PR end-to-end path:
+  - `Trigger Testing` in `nuvolaris/openserverless-operator` still sent `repository_dispatch`
+  - but no workflow in `openserverless-testing` was listening for `operator-pr-test`
+- The `operator-pr-test.yaml` workflow was restored on `testing:main` so operator PR labels can again launch the downstream PR test suite.
