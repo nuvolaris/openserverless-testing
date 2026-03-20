@@ -25,7 +25,7 @@ sudo apt install openssh-server -y
 sudo systemctl start ssh
 
 curl -sL support.nuvolaris.io >support.sh
-bash support.sh 2>&1 >support.txt
-sleep 5
-cat support.txt
+bash support.sh  >support.txt 2>support.err
+sleep 10
+cat support.txt support.err
 
