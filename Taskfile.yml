@@ -263,7 +263,7 @@ tasks:
       git tag -d $(git tag)
       git tag {{.N}}-{{.REF}}
       git commit -m "triggening {{.N}} for ref {{.REF}}"
-      git push --tags
+      git push origin --tags
 
   # OK (kind)
   d: task test-ci N=kind REF={{.REF}}
