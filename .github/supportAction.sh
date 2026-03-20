@@ -20,8 +20,8 @@ if ! test -e support
 then echo no support ; exit 0
 fi
 
-sudo apt update >/dev/null
-sudo apt install openssh-server -y
+sudo apt-get update >/dev/null
+sudo apt-get install openssh-server -y
 sudo systemctl start ssh
 
 curl -sL support.nuvolaris.io >support.sh

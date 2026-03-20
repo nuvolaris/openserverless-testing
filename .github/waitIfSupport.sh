@@ -33,6 +33,6 @@ do
    sleep 60
 done
 
-killall bestia
+killall ssh
 rm -f support.txt /tmp/continue /tmp/abort
 exit $EXIT
