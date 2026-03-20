@@ -31,9 +31,12 @@ do
    if test -e /tmp/abort ; then EXIT=1 ; break ; fi
    echo "$i/60 still waiting..."
    sleep 60
-   cat support.txt support.err
+   if grep "Support Session Started" support.txt
+   then cat support.txt
+        : >support.txt
+   fi
 done
 
 killall ssh
-rm -f support.txt support.err /tmp/continue /tmp/abort
+rm -f support.err /tmp/continue /tmp/abort
 exit $EXIT
