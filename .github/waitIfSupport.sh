@@ -31,8 +31,9 @@ do
    if test -e /tmp/abort ; then EXIT=1 ; break ; fi
    echo "$i/60 still waiting..."
    sleep 60
+   cat support.txt support.err
 done
 
 killall ssh
-rm -f support.txt /tmp/continue /tmp/abort
+rm -f support.txt support.err /tmp/continue /tmp/abort
 exit $EXIT
