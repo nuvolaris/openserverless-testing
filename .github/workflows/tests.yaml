@@ -68,9 +68,9 @@ jobs:
           K3S_ARM_APIHOST: op://OpenServerless/TESTING/K3S_ARM_APIHOST
           K8S_APIHOST: op://OpenServerless/TESTING/K8S_APIHOST
           APIHOST: op://OpenServerless/TESTING/APIHOST
-      - name: Debug Action (if requested)
+      - name: Support Action (if requested)
         run:  .github/supportAction.sh
-      - name: Wait for Debug (if requested)
+      - name: Wait for Support (if requested)
         run: .github/waitIfSupport.sh
       - name: 1 Deploy
         run:  |
