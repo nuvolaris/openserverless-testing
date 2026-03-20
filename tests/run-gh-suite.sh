@@ -21,6 +21,14 @@ if test -n "$TEST_HASH"
 then
     echo "*** commit hash: $TEST_HASH ***"
 fi
+if test -n "$TEST_VERSION"
+then
+    echo "*** operator tag: $TEST_VERSION ***"
+fi
+if test -n "${OPERATOR_IMAGE_OVERRIDE:-}"
+then
+    echo "*** operator image: $OPERATOR_IMAGE_OVERRIDE ***"
+fi
 
 touch ../.secrets
 

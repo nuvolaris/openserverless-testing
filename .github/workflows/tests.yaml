@@ -29,6 +29,7 @@ env:
   TEST_TAG: ${{ github.ref_name }}
   OPS_REPO: ${{ vars.OPS_REPO || 'https://github.com/apache/openserverless-task' }}
   OPS_BRANCH: ${{ vars.OPS_BRANCH || 'main' }}
+  OPERATOR_IMAGE_REPO: ${{ vars.OPERATOR_IMAGE || 'apache/openserverless-operator' }}
 
 jobs:
   test-linux:
@@ -38,6 +39,37 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Prepare OPS_ROOT and operator image override
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --tags --force
+          git clone --depth 1 --branch "$OPS_BRANCH" "$OPS_REPO" _opsroot
+          . tests/lib/selector.sh
+          resolve_test_selector "$TEST_TAG"
+          OPERATOR_IMAGE_REPO_EFFECTIVE="$OPERATOR_IMAGE_REPO"
+          TAG_METADATA="$(git for-each-ref "refs/tags/${TEST_TAG}" --format='%(contents)')"
+          if test -n "$TAG_METADATA"
+          then
+            TAG_OPERATOR_IMAGE="$(printf '%s' "$TAG_METADATA" | jq -r '.operator_image // empty' 2>/dev/null || true)"
+            if test -n "$TAG_OPERATOR_IMAGE"
+            then
+              OPERATOR_IMAGE_REPO_EFFECTIVE="$TAG_OPERATOR_IMAGE"
+            fi
+          fi
+          if test -n "$TEST_VERSION"
+          then
+            OPERATOR_IMAGE_OVERRIDE="${OPERATOR_IMAGE_REPO_EFFECTIVE}:${TEST_VERSION}"
+            jq --arg img "$OPERATOR_IMAGE_OVERRIDE" \
+              '.config.images.operator = $img' \
+              _opsroot/opsroot.json > _opsroot/opsroot.json.tmp
+            mv _opsroot/opsroot.json.tmp _opsroot/opsroot.json
+            echo "Operator image override: $OPERATOR_IMAGE_OVERRIDE"
+            echo "OPERATOR_IMAGE_OVERRIDE=$OPERATOR_IMAGE_OVERRIDE" >> "$GITHUB_ENV"
+          else
+            echo "No operator image override requested for $TEST_TAG"
+          fi
+          echo "OPS_ROOT=$(pwd)/_opsroot" >> "$GITHUB_ENV"
       # Commented out -- GKE plugin not needed without GCP environment:
       # - name: Add Missing plugin
       #   run: |
@@ -69,35 +101,11 @@ jobs:
           K8S_APIHOST: op://OpenServerless/TESTING/K8S_APIHOST
           APIHOST: op://OpenServerless/TESTING/APIHOST
       - name: Support Action (if requested)
-        run:  .github/supportAction.sh
+        run: .github/supportAction.sh
       - name: Wait for Support (if requested)
         run: .github/waitIfSupport.sh
-      - name: 1 Deploy
-        run:  |
-              touch .secrets
-              tests/1-deploy.sh $PLATFORM
-      - name: 3 SysRedis
-        run: tests/3-sys-redis.sh $PLATFORM
-      - name: 4 SysMongo
-        run: tests/4a-sys-ferretdb.sh $PLATFORM
-      - name: 4b SysPostgres
-        run: tests/4b-sys-postgres.sh $PLATFORM
-      - name: 5 SysMinio
-        run: tests/5-sys-minio.sh $PLATFORM
-      - name: 6 Login
-        run: tests/6-login.sh $PLATFORM
-      - name: 7 Static
-        run: tests/7-static.sh $PLATFORM
-      - name: 8 UserRedis
-        run: tests/8-user-redis.sh $PLATFORM
-      - name: 9a UserFerretDB
-        run: tests/9a-user-ferretdb.sh $PLATFORM
-      - name: 9b UserPostgres
-        run: tests/9b-user-postgres.sh $PLATFORM
-      - name: 10 UserMinio
-        run: tests/10-user-minio.sh $PLATFORM
-      - name: 14 RuntimeTesting
-        run: tests/14-runtime-testing.sh $PLATFORM
+      - name: Run GitHub Test Suite
+        run: tests/run-gh-suite.sh "$TEST_TAG"
 
   test-windows:
     runs-on: windows-2022

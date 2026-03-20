@@ -3,14 +3,19 @@
 resolve_test_selector() {
     local raw_selector="${1:?test selector}"
     local selector="$raw_selector"
+    local release_test_re='^(kind|k3s|k3sarm|k8s|k8sarm|mk8s|mk8sarm|eks|eksarm|aks|aksarm|gke|gkearm|osh|osharm)-(.+)$'
 
     TEST_TAG="$raw_selector"
     TEST_HASH=""
+    TEST_VERSION=""
     TEST_PROFILE="default"
 
     if [[ "$selector" =~ ^(.+)-([0-9a-f]{7,40})$ ]]; then
         TEST_NAME="${BASH_REMATCH[1]}"
         TEST_HASH="${BASH_REMATCH[2]}"
+    elif [[ "$selector" =~ $release_test_re ]]; then
+        TEST_NAME="${BASH_REMATCH[1]}"
+        TEST_VERSION="${BASH_REMATCH[2]}"
     else
         TEST_NAME="$selector"
     fi
@@ -124,5 +129,5 @@ resolve_test_selector() {
         ;;
     esac
 
-    export TEST_TAG TEST_NAME TEST_HASH TEST_SELECTOR TEST_PLATFORM TEST_ARCH TEST_PROFILE
+    export TEST_TAG TEST_NAME TEST_HASH TEST_VERSION TEST_SELECTOR TEST_PLATFORM TEST_ARCH TEST_PROFILE
 }

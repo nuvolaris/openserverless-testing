@@ -1,0 +1,67 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+name: Operator Release Testing
+run-name: "Release testing tags for ${{ github.event.client_payload.operator_image || vars.OPERATOR_IMAGE || 'apache/openserverless-operator' }}:${{ github.event.client_payload.operator_tag }}"
+
+on:
+  repository_dispatch:
+    types: [operator-release-testing]
+
+env:
+  OPERATOR_TAG: ${{ github.event.client_payload.operator_tag }}
+  OPERATOR_IMAGE_REPO: ${{ github.event.client_payload.operator_image || vars.OPERATOR_IMAGE || 'apache/openserverless-operator' }}
+  TARGETS: ${{ github.event.client_payload.targets || 'kind,k3s' }}
+
+jobs:
+  tags-push:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT }}
+
+      - name: Create annotated testing tags
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          IFS=',' read -r -a targets <<< "$TARGETS"
+          created_tags=()
+          for raw_target in "${targets[@]}"
+          do
+            target="$(echo "$raw_target" | xargs)"
+            test -n "$target" || continue
+            test_tag="${target}-${OPERATOR_TAG}"
+            created_tags+=("$test_tag")
+            if git ls-remote --tags origin "refs/tags/${test_tag}" | grep -q .
+            then
+              echo "Testing tag already present: ${test_tag}"
+              continue
+            fi
+            metadata="$(jq -nc \
+              --arg operator_image "$OPERATOR_IMAGE_REPO" \
+              --arg operator_tag "$OPERATOR_TAG" \
+              --arg test_tag "$test_tag" \
+              '{operator_image: $operator_image, operator_tag: $operator_tag, test_tag: $test_tag}')"
+            git tag -a "$test_tag" -m "$metadata"
+            git push origin "$test_tag"
+          done
+          echo "Operator image: ${OPERATOR_IMAGE_REPO}:${OPERATOR_TAG}"
+          echo "Dispatching testing tags: ${created_tags[*]}"

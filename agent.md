@@ -123,6 +123,82 @@
 
 - Investigate the pre-existing `k3s-amd` initialization/login failure in `openserverless-testing` to separate environment issues from application regressions.
 
+## 2026-03-20 Release-Tag Testing Realignment
+
+### New primary contract
+
+- The previous PR-label contracts based on:
+  - `<platform>-<architecture>`
+  - `<test>-<hash>`
+  are no longer the main design target for release validation.
+- The new primary contract is:
+  - operator release tag: `0.1.0-incubating.<timestamp>`
+  - testing tag: `<test>-<operator-tag>`
+- Examples:
+  - `kind-0.1.0-incubating.123456`
+  - `k3s-0.1.0-incubating.123456`
+
+### Documentation update
+
+- Replaced the old gap-analysis document with:
+  - `spec.md`
+- The new document defines:
+  - release-tag build/test/publish in `openserverless-operator`
+  - PR build/test in `openserverless-operator`
+  - optional comment-triggered rerun in `openserverless-operator`
+  - dispatch-driven tag generation in `openserverless-testing`
+  - operator image override support
+
+### `openserverless-testing` implementation
+
+- Added `platform-ci-tests.yaml` again, but with new semantics:
+  - event type: `operator-release-testing`
+  - creates annotated testing tags such as `kind-<operator-tag>` and `k3s-<operator-tag>`
+  - the tag annotation stores:
+    - `operator_image`
+    - `operator_tag`
+    - `test_tag`
+- Updated `tests.yaml` so tag-driven runs:
+  - fetch tag annotations
+  - resolve `operator_image` from the tag metadata when present
+  - patch a cloned `OPS_ROOT` with `${OPERATOR_IMAGE}:${OPERATOR_TAG}`
+  - run the shared launcher `tests/run-gh-suite.sh`
+- Updated `tests/lib/selector.sh` to support release-style selectors of the form:
+  - `<test>-<operator-tag>`
+- Updated `tests/run-gh-suite.sh` to log:
+  - operator tag
+  - operator image override
+
+### `openserverless-operator` implementation
+
+- On a clean `nuvolaris` worktree, replaced the old PR-label dispatch workflow with:
+  - `check.yml`
+    - PR and manual local build/test with Docker/Kind
+  - `comment-build.yml`
+    - `/test build` rerun on PR comments from collaborators
+  - `image.yml`
+    - release-tag build/test/publish
+    - downstream dispatch to `openserverless-testing`
+- Added helper scripts:
+  - `.github/build-and-test.sh`
+  - `.github/dispatch-testing-tags.sh`
+- The operator image repository is now resolved from:
+  - workflow input or repo variable `OPERATOR_IMAGE`
+  - default fallback `apache/openserverless-operator`
+
+### Branches used
+
+- `openserverless-testing-nuvolaris-main`
+  - branch: `feat/release-tag-testing-spec`
+- `openserverless-operator-main-spec`
+  - branch: `feat/release-tag-testing-spec`
+
+### Validation still required
+
+- shell syntax checks for the new helper scripts and updated test scripts
+- YAML parsing for the new/updated workflows
+- optional live validation on `nuvolaris` once the branches are pushed
+
 ## 2026-03-19 Additional Operations
 
 ### 1Password and SSH access to the k3s AMD server
