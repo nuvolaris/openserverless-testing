@@ -70,6 +70,9 @@ jobs:
             echo "Requested test hash: $TEST_HASH"
           fi
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -86,10 +89,17 @@ jobs:
           SHORT_SHA="${PR_SHA:0:7}"
           IMAGE_TAG="pr-${PR_NUMBER}-${SHORT_SHA}"
           FULL_IMAGE="${OPERATOR_IMAGE}:${IMAGE_TAG}"
-          echo "Building ${FULL_IMAGE} from _operator/"
-          docker build -t "${FULL_IMAGE}" _operator/
-          docker push "${FULL_IMAGE}"
+          echo "image_tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
           echo "image_ref=${FULL_IMAGE}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push multi-arch operator image
+        uses: docker/build-push-action@v6
+        with:
+          context: _operator
+          push: true
+          provenance: false
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.build.outputs.image_ref }}
 
       - name: Patch opsroot.json with PR image
         run: |

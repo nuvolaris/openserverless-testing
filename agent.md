@@ -524,3 +524,23 @@
   - `Trigger Testing` in `nuvolaris/openserverless-operator` still sent `repository_dispatch`
   - but no workflow in `openserverless-testing` was listening for `operator-pr-test`
 - The `operator-pr-test.yaml` workflow was restored on `testing:main` so operator PR labels can again launch the downstream PR test suite.
+
+## 2026-03-20 K3s Arm Readiness
+
+### First blocker removed
+
+- The operator PR image built by `operator-pr-test.yaml` was still single-arch because it used:
+  - `docker build`
+  - `docker push`
+  on the default `ubuntu-22.04` GitHub runner
+- That path produced an `amd64` image only, which is not suitable for a `k3s arm64` target cluster.
+- The workflow was updated to:
+  - set up QEMU
+  - build with `docker/build-push-action`
+  - push a multi-arch image for `linux/amd64,linux/arm64`
+- This removes the main image-architecture blocker for labels like `k3sarm-<sha>`.
+
+### Remaining operational dependency
+
+- `k3sarm` still requires a reachable ARM host for SSH/K3s provisioning.
+- If the public API host and the SSH host differ, the workflow path will still need an explicit `K3S_ARM_SSH_HOST` source; the current patch only removed the image-architecture blocker.
