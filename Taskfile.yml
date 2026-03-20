@@ -22,7 +22,7 @@ vars:
   CLOUD: azure
   DOMAIN: opstest.top
   REF:
-    sh: git rev-parse --short HEAD
+    sh: date +%Y.%m%d.%H%S
 
 dotenv:
   - .env
@@ -262,25 +262,25 @@ tasks:
     - |
       git tag -d $(git tag)
       git tag {{.N}}-{{.REF}}
-      git commit -m "triggening {{.N}} for ref {{.REF}}"
+      git commit -m "triggening {{.N}} for ref {{.REF}}" || true
       git push --tags
 
   # OK (kind)
-  d: task test-ci N=kind REF={{.REF}}
+  d: task test-ci N=kind
   # OK (k3s)
-  k: task test-ci N=k3s REF=$REF
+  k: task test-ci N=k3s 
   # OK (k3s-arm)
-  r: task test-ci N=k3s-arm REF=$REF
+  r: task test-ci N=k3s-arm 
   # OK (mk8s)
-  m: task test-ci N=mk8s REF=$REF
+  m: task test-ci N=mk8s 
   # OK (eks)
-  e: task test-ci N=eks REF=$REF
+  e: task test-ci N=eks 
   # OK (aks)
-  a: task test-ci N=aks REF=$REF
+  a: task test-ci N=aks 
   # TODO: to be verified
-  g: task test-ci N=gke REF=$REF
+  g: task test-ci N=gke 
   # TODO: to be verified
-  o: task test-ci N=osh REF=$REF
+  o: task test-ci N=osh
 
   all:
    ignore_error: true
