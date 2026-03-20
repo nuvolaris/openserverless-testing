@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-if ! test -e .support
+if ! test -e support.txt
 then exit 0
 fi
 
@@ -34,5 +34,5 @@ do
 done
 
 killall bestia
-rm -f .support /tmp/continue /tmp/abort
+rm -f support.txt /tmp/continue /tmp/abort
 exit $EXIT
